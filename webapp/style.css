@@ -1,0 +1,15 @@
+p1 {
+    line-height: 1.75em;
+}
+
+p3 {
+    margin-top: 20px;
+}
+
+#custom-bg {
+    background-color: rgb(211, 209, 207);
+}
+
+.buttons-width {
+    width: 120px !important;
+}
