@@ -6,8 +6,9 @@ You will need to work somewhat with one other pair,as you will need access to fo
 The intent is to create a simple meshnetwork for your internet of things (IoT):
 
     1.One of the four boards should interface to a host computer via serial RS232 emulated over USB. 
-    A simple web server program running on the host should issue commands over the serialinterface to turn the lights 
-    of all three boards on or off. A standard web browser should be able to connect to this server; 
+    A simple web server program running on the host should issue commands over the serial interface 
+    to turn the lights of all three boards on or off. 
+    A standard web browser should be able to connect to this server; 
     the server will present a page with “on” and “off” buttons for the lights.
     The web page should also report lights that are uncontrollable because of communication failure.
     
