@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>LED switching application</title>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" 
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" 
+        crossorigin="anonymous">
+        <!-- Custom CSS file-->
+        <link href="{{ url_for('static', filename='css/style.css') }}" rel = "stylesheet" />
+    </head>
+    <body>
+        <h1 class="display-4 text-center p-2 mb-2 bg-info text-white ">
+            Control Application for LEDs switching <bR>
+            <small class="h4 text-white">For the purpose of ELEC3215 Coursework</small>
+        </h1>
+        <h3 class="text-center p-2 mb-2 bg-secondary text-white">Instructions</h3>
+        <h5 class="text-center p-2 mb-2 bg-secondary text-white">
+            <p1>
+            There are three slave boards in the network.<br>You can control the LED on each board.<br>
+            You can control each slave independently.
+            </p1>
+        </h5>
+        <div id="custom-bg">
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-4 text-center">
+                        <h3>Slave 1</h3>
+                        <a href="/slave/{{1}}/{{1}}"><button class="btn btn-success buttons-width">LED ON</button></a>
+                        <a href="/slave/{{1}}/{{0}}"><button class="btn btn-dark buttons-width">LED OFF</button></a>
+                        <br><br>
+                        <h4>Current Status</h4>
+                        <h5>{{ status.slave1}}</h5>
+                    </div>
+                    <div class="col-sm-4 text-center">
+                        <h3>Slave 2</h3>
+                        <a href="/slave/{{2}}/{{1}}"><button class="btn btn-success buttons-width">LED ON</button></a>
+                        <a href="/slave/{{2}}/{{0}}"><button class="btn btn-dark buttons-width">LED OFF</button></a>
+                        <br><br>
+                        <h4>Current Status</h4>
+                        <h5>{{ status.slave2}}</h5>
+                    </div>
+                    <div class="col-sm-4 text-center">
+                        <h3>Slave 3</h3>
+                        <a href="/slave/{{3}}/{{1}}"><button class="btn btn-success buttons-width">LED ON</button></a>
+                        <a href="/slave/{{3}}/{{0}}"><button class="btn btn-dark buttons-width">LED OFF</button></a>
+                        <br><br>
+                        <h4>Current Status</h4>
+                        <h5>{{ status.slave3}}</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </body>
+</html>
