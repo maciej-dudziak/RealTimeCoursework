@@ -4,7 +4,7 @@ import serial
 #start app with the name of the script
 app = Flask(__name__)
 #create a serial port and open it
-#ser = serial.Serial('COM3', 9600)
+ser = serial.Serial('/dev/ttyACM1', 115200)
 
 class LED_status():
     slave1 = "Off"
@@ -22,8 +22,8 @@ def slave1_led(slave_number,led_action):
     #command structure: { <id> - id of the slave (1, 2 or 3), <operation> - operation on LED (0 - turn off, 1 - turn on) }
     command = "{}.{}".format(slave_number, led_action)
     #send command to master device
-    #if ser.is_open():
-    #    ser.write(command)
+    if ser.isOpen():
+        ser.write(command.encode())
     #    response = ser.read(30)
     #    if response == "1":
     #       
