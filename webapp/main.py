@@ -4,9 +4,9 @@ import serial
 #start app with the name of the script
 app = Flask(__name__)
 #create a serial port and open it
-ser = serial.Serial('COM10', 115200)
+#ser = serial.Serial('COM10', 115200)
 #use below if Linux
-#ser = serial.Serial('/dev/ttyACM1', 115200)
+ser = serial.Serial('/dev/ttyACM0', 115200)
 
 class LED_status():
     slave1 = "Off"
@@ -35,7 +35,13 @@ def slave1_led(slave_number,led_action):
             status.slave2 = "On" if led_action==1 else "Off"
         elif slave_number == 3:
             status.slave3 = "On" if led_action==1 else "Off"
-    #else:
+    else:
+        if slave_number == 1:
+            status.slave1 = "Error Occured - Uncontrollable"
+        elif slave_number == 2:
+            status.slave2 = "Error Occured - Uncontrollable"
+        elif slave_number == 3:
+            status.slave3 = "Error Occured - Uncontrollable"
 
     return redirect('/')
 
