@@ -15,3 +15,5 @@ utilities/
 *.jlink
 *.project
 *.cproject
+/.metadata/
+/.mcuxpressoide_packages_support/

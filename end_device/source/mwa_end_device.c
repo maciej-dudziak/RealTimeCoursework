@@ -77,6 +77,9 @@ typedef struct
 	uint16_t other_slave_address1;
 	uint16_t other_slave_address2;
 	uint8_t data;
+	uint8_t rgb_r;
+	uint8_t rgb_b;
+	uint8_t rgb_g;
 	uint8_t packet_seq_number;
 } nwkPacket_t;
 
@@ -95,7 +98,7 @@ static void    AppPollWaitTimeout(void *);
 static void    App_HandleKeys( key_event_t events );
 
 static void App_TransmitUartData(uint16_t* dstAddress, nwkPacket_t* pNwkPck);
-void App_ExecuteCommand(uint8_t command);
+void App_ExecuteCommand(uint8_t command, uint8_t rgb_r, uint8_t rgb_b, uint8_t rgb_g);
 
 void App_init( void );
 void AppThread (uint32_t argument);
@@ -993,15 +996,17 @@ static uint8_t App_HandleMlmeInput(nwkMessage_t *pMsg)
 /*****************************************************************************
  * This function executes master command and turn the LED accordingly
  *****************************************************************************/
-void App_ExecuteCommand(uint8_t command)
+void App_ExecuteCommand(uint8_t command, uint8_t rgb_r, uint8_t rgb_b, uint8_t rgb_g)
 {
 	if (command == '1')
 	{
-		Led4On();
+		if (rgb_r > 0) Led2On();
+		if (rgb_g > 0) Led3On();
+		if (rgb_b > 0) Led4On();
 	}
 	if ( command == '0')
 	{
-		Led4Off();
+		LED_TurnOffAllLeds();
 	}
 }
 /******************************************************************************
@@ -1034,22 +1039,32 @@ static void App_HandleMcpsInput(mcpsToNwkMessage_t *pMsgIn)
 		if( data_in.destination_address == maMyAddressShort )
 		{
 			/* This is target device - extract data and process it */
-			App_ExecuteCommand(data_in.data);
+			App_ExecuteCommand(data_in.data, data_in.rgb_r, data_in.rgb_b, data_in.rgb_g);
+			data_in.destination_address = mCoordInfo.coordAddress;
+			/* Transmit ACK directly to the host */
+			new_dest_address = (uint16_t)mCoordInfo.coordAddress;
+			App_TransmitUartData(&new_dest_address, &data_in);
+			/* And relay it through remaining slaves */
+			App_TransmitUartData(&data_in.other_slave_address1, &data_in);
+			App_TransmitUartData(&data_in.other_slave_address2, &data_in);
 		}
 		else
 		{
 			/* Send the packet to the first slave from remaining */
-			if( data_in.other_slave_address1 != 0xFFFF){
+			/* Check if this address is not mine - if it is - not sending the packet of course */
+			if( data_in.other_slave_address1 != maMyAddressShort
+					&& data_in.other_slave_address1 != pMsgIn->msgData.dataInd.srcAddr){
 				temp = data_in;
 				new_dest_address = data_in.other_slave_address1;
-				temp.other_slave_address1 = 0xFFFF;
+				temp.rgb_b = 0x00;
 				App_TransmitUartData(&new_dest_address, &temp);
 			}
 			/* Send the packet to the second slave of remaining */
-			if (data_in.other_slave_address2 != 0xFFFF){
+			if (data_in.other_slave_address2 != maMyAddressShort
+					&& data_in.other_slave_address1 != pMsgIn->msgData.dataInd.srcAddr){
 				temp=data_in;
 				new_dest_address = data_in.other_slave_address2;
-				temp.other_slave_address2 = 0xFFFF;
+				temp.rgb_g = 0x00;
 				App_TransmitUartData(&new_dest_address, &temp);
 			}
 		}
@@ -1071,7 +1086,6 @@ static void App_HandleMcpsInput(mcpsToNwkMessage_t *pMsgIn)
     break;
   }
 }
-
 /******************************************************************************
 * The App_WaitMsg(nwkMessage_t *pMsg, uint8_t msgType) function does not, as
 * the name implies, wait for a message, thus blocking the execution of the
@@ -1115,6 +1129,10 @@ static uint8_t App_WaitMsg(nwkMessage_t *pMsg, uint8_t msgType)
 ******************************************************************************/
 static void App_TransmitUartData(uint16_t* dstAddress, nwkPacket_t* pNwkPck)
 {   
+	/* If destination address field is 0xFFFF - default value - dont send data there */
+	if (*dstAddress == 0xFFFF) {
+		return;
+	}
     uint16_t count;
     
     /* Count bytes receive over the serial interface */
@@ -1150,7 +1168,7 @@ static void App_TransmitUartData(uint16_t* dstAddress, nwkPacket_t* pNwkPck)
         mpPacket->msgData.dataReq.pMsdu = (uint8_t*)(&mpPacket->msgData.dataReq.pMsdu) + 
                                           sizeof(mpPacket->msgData.dataReq.pMsdu);
         //Serial_Read(interfaceId, mpPacket->msgData.dataReq.pMsdu, count, &count);
-        FLib_MemCpy(&mpPacket->msgData.dataReq.dstAddr, (void*)pNwkPck, sizeof(nwkPacket_t));
+        FLib_MemCpy(mpPacket->msgData.dataReq.pMsdu, (uint8_t*)pNwkPck, sizeof(nwkPacket_t));
         /* Create the header using coordinator information gained during 
         the scan procedure. Also use the short address we were assigned
         by the coordinator during association. */

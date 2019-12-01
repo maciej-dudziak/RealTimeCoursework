@@ -46,8 +46,8 @@
 /* If there are too many pending packets to be send over the air, */
 /* receive mMaxKeysToReceive_c chars. */
 /* The chars will be send over the air when there are no pending packets*/
-#define mMaxKeysToReceive_c 32
-
+#define mMaxKeysToReceive_c 	32
+#define maxMessageDelayMs		2000
 /************************************************************************************
 *************************************************************************************
 * Private prototypes
@@ -59,11 +59,15 @@ typedef struct
 	uint16_t other_slave_address1;
 	uint16_t other_slave_address2;
 	uint8_t data;
+	uint8_t rgb_r;
+	uint8_t rgb_b;
+	uint8_t rgb_g;
 	uint8_t packet_seq_number;
 } nwkPacket_t;
 
 /* Forward declarations of helper functions */
 static void    UartRxCallBack(void*);
+static void AckTimerCallback(void*);
 static uint8_t App_StartScan(macScanType_t scanType, uint8_t appInstance);
 static void    App_HandleScanEdConfirm(nwkMessage_t *pMsg);
 static uint8_t App_StartCoordinator( uint8_t appInstance );
@@ -86,6 +90,9 @@ extern void Mac_SetExtendedAddress(uint8_t *pAddr, instanceId_t instanceId);
 
 const char* positive_response = "Success\n";
 const char* negative_response = "Error\n";
+
+/* Mutex instance for exclusion between timer interrupt and main task */
+osaMutexId_t ackMutex;
 /************************************************************************************
 *************************************************************************************
 * Private type definitions
@@ -117,7 +124,7 @@ static nwkToMcpsMessage_t *mpPacket;
 static uint8_t mMsduHandle;
 
 /* Number of pending data packets */
-static uint8_t mcPendingPackets;
+volatile uint8_t mcPendingPackets;
 
 /* Application input queues */
 static anchor_t mMlmeNwkInputQueue;
@@ -126,6 +133,9 @@ static anchor_t mMcpsNwkInputQueue;
 static const uint64_t mExtendedAddress = mMacExtendedAddress_c;
 static instanceId_t   macInstance;
 static uint8_t        interfaceId;
+static tmrTimerID_t   timerId;
+tmrTimeInMilliseconds_t	timerPeriod;
+
 osaEventId_t          mAppEvent;
 
 nwkPacket_t last_packet;
@@ -225,6 +235,14 @@ void App_init( void )
     Serial_SetBaudRate(interfaceId, gUARTBaudRate115200_c);
     Serial_SetRxCallBack(interfaceId, UartRxCallBack, NULL);
     
+    /* Create instance of timer; after the timer is allocated its internal status is set to inactive */
+    timerId = TMR_AllocateTimer();
+    /* Timer period in ms */
+    timerPeriod = maxMessageDelayMs;
+
+    /* Create Mutex for exclusion between timer interrupt and main task */
+    ackMutex = OSA_MutexCreate();
+
     /*signal app ready*/  
     LED_StartSerialFlash(LED1);
     
@@ -828,21 +846,46 @@ static uint8_t App_HandleMlmeInput(nwkMessage_t *pMsg, uint8_t appInstance)
 ******************************************************************************/
 static void App_HandleMcpsInput(mcpsToNwkMessage_t *pMsgIn, uint8_t appInstance)
 {
+	nwkPacket_t data_in;
   switch(pMsgIn->msgType)
   {
     /* The MCPS-Data confirm is sent by the MAC to the network
        or application layer when data has been sent. */
   case gMcpsDataCnf_c:
-    if(mcPendingPackets)
-      mcPendingPackets--;
-    Serial_SyncWrite( interfaceId, (uint8_t*) positive_response, strlen(positive_response) );
+    /* If the MAC seq. number match the seq. no of last sent packet - print confirmation message */
+    /*if (pMsgIn->msgData.dataCnf.msduHandle == mMsduHandle)
+    {
+    	OSA_MutexLock(ackMutex, osaWaitForever_c);
+    	if( mcPendingPackets > 0 )
+    	{
+    		mcPendingPackets--;
+
+    		TMR_StopTimer(timerId);
+
+    		Serial_SyncWrite( interfaceId, (uint8_t*) positive_response, strlen(positive_response) );
+    	}
+    	OSA_MutexUnlock(ackMutex);
+    }*/
     break;
 
   case gMcpsDataInd_c:
     /* The MCPS-Data indication is sent by the MAC to the network
-       or application layer when data has been received. We simply
-       copy the received data to the UART. */
-    Serial_SyncWrite( interfaceId,pMsgIn->msgData.dataInd.pMsdu, pMsgIn->msgData.dataInd.msduLength );
+       or application layer when data has been received. Read the data. */
+	  FLib_MemCpy((uint8_t*)&data_in, pMsgIn->msgData.dataInd.pMsdu, sizeof(nwkPacket_t));
+	  if (data_in.packet_seq_number == seq_no)
+	  {
+		  OSA_MutexLock(ackMutex, osaWaitForever_c);
+		  if( mcPendingPackets > 0 )
+	    	{
+	    		mcPendingPackets--;
+	    		/* Stop ACK Timer */
+	    		TMR_StopTimer(timerId);
+	    		/* Write positive response to server */
+	    		Serial_SyncWrite( interfaceId, (uint8_t*) positive_response, strlen(positive_response) );
+	    	}
+		  OSA_MutexUnlock(ackMutex);
+	  }
+    //Serial_SyncWrite( interfaceId,pMsgIn->msgData.dataInd.pMsdu, pMsgIn->msgData.dataInd.msduLength );
     break;
     
   default:
@@ -947,7 +990,10 @@ static void formNwkDataPacket(nwkPacket_t* pNwkPck)
     /* Update seq number */
     seq_no += 1;
     pNwkPck->packet_seq_number = seq_no;
-
+    /* Set initial RGB values to 255,255,255 - white colour */
+    pNwkPck->rgb_r = 0xFF;
+    pNwkPck->rgb_b = 0xFF;
+    pNwkPck->rgb_g = 0xFF;
 }
 static void App_BroadcastData(void)
 {
@@ -957,20 +1003,26 @@ static void App_BroadcastData(void)
 	formNwkDataPacket(&data_to_send);
 	/* Save last packet */
 	last_packet = data_to_send;
-	/* Create unique sequence number */
+	/* Create unique MAC sequence number */
 	mMsduHandle++;
 	/* Broadcast/send the packet to all nodes */
-	for (int i = 0; i < no_of_slaves; i++)
+	if (mcPendingPackets < mDefaultValueOfMaxPendingDataPackets_c)
 	{
-		if (mDeviceShortAddress[i] != 0xFFFF)
+		for (int i = 0; i < no_of_slaves; i++)
 		{
-			App_TransmitUartData(&mDeviceShortAddress[i], &data_to_send);
+			if (mDeviceShortAddress[i] != 0xFFFF)
+			{
+				App_TransmitUartData(&mDeviceShortAddress[i], &data_to_send);
+			}
 		}
+		/* One data packet send - increment counter */
+		mcPendingPackets++;
+		/* Start ACK-Wait timer */
+		TMR_StartTimer(timerId, gTmrSingleShotTimer_c, timerPeriod, AckTimerCallback, NULL);
 	}
 }
 static void App_TransmitUartData(uint16_t* dstAddress, nwkPacket_t* pNwkPck)
 {
-    uint16_t count;
     /* Use multi buffering for increased TX performance. It does not really
     have any effect at low UART baud rates, but serves as an
     example of how the throughput may be improved in a real-world
@@ -1015,16 +1067,6 @@ static void App_TransmitUartData(uint16_t* dstAddress, nwkPacket_t* pNwkPck)
         (void)NWK_MCPS_SapHandler(mpPacket, macInstance);
         /* Prepare for another data buffer */
         mpPacket = NULL;
-        mcPendingPackets++;
-    }
-    
-    /* If the data wasn't send over the air because there are too many pending packets,
-    or new data has beed received, try to send it later   */
-    Serial_RxBufferByteCount(interfaceId, &count);
-    
-    if( count )
-    {
-        OSA_EventSet(mAppEvent, gAppEvtRxFromUart_c);
     }
 }
 
@@ -1060,7 +1102,20 @@ static void App_HandleKeys
     }
 #endif
 }
-
+/******************************************************************************
+ * This functions is called by the ACK Timer when then waiting period ends.
+ * It writes negative response to the server.
+ *****************************************************************************/
+static void AckTimerCallback( void *pData )
+{
+	OSA_MutexLock(ackMutex, osaWaitForever_c);
+	if( mcPendingPackets > 0 )
+	{
+		mcPendingPackets--;
+		Serial_SyncWrite(interfaceId, (uint8_t*) negative_response, strlen(negative_response) );
+	}
+	OSA_MutexUnlock(ackMutex);
+}
 /******************************************************************************
 * The following functions are called by the MAC to put messages into the
 * Application's queue. They need to be defined even if they are not used
