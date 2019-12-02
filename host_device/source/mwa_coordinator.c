@@ -47,7 +47,7 @@
 /* receive mMaxKeysToReceive_c chars. */
 /* The chars will be send over the air when there are no pending packets*/
 #define mMaxKeysToReceive_c 	32
-#define maxMessageDelayMs		2000
+#define maxMessageDelayMs		3000
 //#define	printEnable
 /************************************************************************************
 *************************************************************************************
@@ -123,6 +123,9 @@ static nwkToMcpsMessage_t *mpPacket;
 
 /* The MSDU handle is a unique data packet identifier */
 static uint8_t mMsduHandle;
+
+/* Counts number of devices connected to the network */
+uint8_t deviceId;
 
 /* Number of pending data packets */
 volatile uint8_t mcPendingPackets;
@@ -220,6 +223,7 @@ void App_init( void )
     gState = stateInit;
     /* Reset number of pending packets */
     mcPendingPackets = 0;
+    deviceId = 0;
     
     /* Prepare input queues.*/
     MSG_InitQueue(&mMlmeNwkInputQueue); 
@@ -767,7 +771,6 @@ static uint8_t App_SendAssociateResponse(nwkMessage_t *pMsgIn, uint8_t appInstan
 {
   mlmeMessage_t *pMsg;
   mlmeAssociateRes_t *pAssocRes;
-  uint8_t deviceId = 0;
 #ifdef printEnable
   Serial_Print(interfaceId,"Sending the MLME-Associate Response message to the MAC...", gAllowToBlock_d);
 #endif
@@ -805,13 +808,23 @@ static uint8_t App_SendAssociateResponse(nwkMessage_t *pMsgIn, uint8_t appInstan
     pAssocRes->securityLevel = gMacSecurityNone_c;
 
     /* Save device info. */
-    FLib_MemCpy(&mDeviceShortAddress + deviceId, &pAssocRes->assocShortAddress, 2);
-    FLib_MemCpy(&mDeviceLongAddress + deviceId,  &pAssocRes->deviceAddress,     8);
-    
+    FLib_MemCpy(&mDeviceShortAddress[deviceId], &pAssocRes->assocShortAddress, 2);
+    FLib_MemCpy(&mDeviceLongAddress[deviceId],  &pAssocRes->deviceAddress,     8);
+    /* If deviceId - effectively number of already connected devices (App does not handle disconnections!!! - is >= 3 - reset it to 0 */
+    if (deviceId < 2)
+    {
+    	deviceId++;
+    }
+    else
+    {
+    	deviceId = 0;
+    }
     /* Send the Associate Response to the MLME. */
     if( gSuccess_c == NWK_MLME_SapHandler( pMsg, macInstance ) )
     {
+#ifdef printEnable
       Serial_Print( interfaceId,"Done\n\r", gAllowToBlock_d );
+#endif
       return errorNoError;
     }
     else
@@ -1006,7 +1019,7 @@ static void formNwkDataPacket(nwkPacket_t* pNwkPck)
 	{
 	    return;
 	}
-	Serial_SyncWrite(interfaceId, &readByte, count);
+	//Serial_SyncWrite(interfaceId, &readByte, count);
     /* Check if the second byte of the command is "." - check command structure */
     Serial_GetByteFromRxBuffer(interfaceId, &readByte, &count);
     if ( readByte != '.')
