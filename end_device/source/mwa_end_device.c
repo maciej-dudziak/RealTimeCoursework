@@ -354,7 +354,7 @@ void App_init( void )
     if (!PWRLib_MCU_WakeupReason.Bits.DeepSleepTimeout)
     {
 #endif
-        Serial_Print(interfaceId, "\n\rPress any switch on board to start running the application.\n\r", gAllowToBlock_d);  
+        Serial_Print(interfaceId, "\n\rPress any switch on board to start running the application.\n\r", gAllowToBlock_d);
 #if gNvmTestActive_d
         Serial_Print(interfaceId, "Long press switch_1 on board to use MAC data restore from NVM.\n\r", gAllowToBlock_d);  
 #endif
@@ -425,7 +425,7 @@ void AppThread(uint32_t argument)
         {
         case stateInit:
             /* Print a welcome message to the UART */
-            Serial_Print(interfaceId, "MyWirelessApp Demo End Device application is initialized and ready.\n\r", gAllowToBlock_d);  
+            Serial_Print(interfaceId, "MyWirelessApp Demo End Device application is initialized and ready.\n\r", gAllowToBlock_d);
 #if gNvmTestActive_d 
             if( ev & gAppEvtPressedRestoreNvmBut_c )
             {
@@ -480,7 +480,7 @@ void AppThread(uint32_t argument)
         case stateScanActiveStart:
             /* Start the Active scan, and goto wait for confirm state. */
             Serial_Print(interfaceId, "\n\rStart scanning for a PAN coordinator\n\r", gAllowToBlock_d);
-            
+
             rc = App_StartScan(gScanModeActive_c);
             if(rc == errorNoError)
             {
@@ -509,7 +509,7 @@ void AppThread(uint32_t argument)
                             Serial_Print(interfaceId, "\n\rBeacon Spec.......0x", gAllowToBlock_d); Serial_PrintHex(interfaceId, (uint8_t*)&mCoordInfo.superframeSpec, 2, gPrtHexNoFormat_c);
                             Serial_Print(interfaceId, "\n\rLink Quality......0x", gAllowToBlock_d); Serial_PrintHex(interfaceId, &mCoordInfo.linkQuality, 1, gPrtHexNoFormat_c);
                             Serial_Print(interfaceId, "\n\r\n\r", gAllowToBlock_d);                         
-                            
+
                             gState = stateAssociate;
                             OSA_EventSet(mAppEvent, gAppEvtDummyEvent_c);
                         }

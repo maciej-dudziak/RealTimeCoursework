@@ -48,6 +48,7 @@
 /* The chars will be send over the air when there are no pending packets*/
 #define mMaxKeysToReceive_c 	32
 #define maxMessageDelayMs		2000
+//#define	printEnable
 /************************************************************************************
 *************************************************************************************
 * Private prototypes
@@ -245,8 +246,9 @@ void App_init( void )
 
     /*signal app ready*/  
     LED_StartSerialFlash(LED1);
-    
+#ifdef printEnable
     Serial_Print(interfaceId, "\n\rPress any switch on board to start running the application.\n\r", gAllowToBlock_d);  
+#endif
 }
 
 /*****************************************************************************
@@ -292,7 +294,9 @@ void AppThread(uint32_t argument)
                     /* ALWAYS free the beacon frame contained in the beacon notify indication.*/
                     /* ALSO the application can use the beacon payload.*/
                     MSG_Free(((nwkMessage_t *)pMsgIn)->msgData.beaconNotifyInd.pBufferRoot);
+#ifdef printEnable
                     Serial_Print(interfaceId, "Received an MLME-Beacon Notify Indication\n\r", gAllowToBlock_d);
+#endif
                 }
             }
         }
@@ -302,7 +306,9 @@ void AppThread(uint32_t argument)
         {
         case stateInit:
             /* Print a welcome message to the UART */
+#ifdef printEnable
           Serial_Print(interfaceId,"MyWirelessApp Demo Coordinator application is initialized and ready.\n\r\n\r", gAllowToBlock_d);
+#endif
           /* Goto Energy Detection state. */
           gState = stateScanEdStart;
           OSA_EventSet(mAppEvent, gAppEvtDummyEvent_c);
@@ -310,8 +316,9 @@ void AppThread(uint32_t argument)
           
       case stateScanEdStart:
           /* Start the Energy Detection scan, and goto wait for confirm state. */
+#ifdef printEnable
           Serial_Print(interfaceId,"Initiating the Energy Detection Scan\n\r", gAllowToBlock_d);
-
+#endif
           ret = App_StartScan(gScanModeED_c, 0);
           if(ret == errorNoError)
           {
@@ -345,10 +352,11 @@ void AppThread(uint32_t argument)
           if (ev & gAppEvtStartCoordinator_c)
           {
               /* Start up as a PAN Coordinator on the selected channel. */
+#ifdef printEnable
               Serial_Print(interfaceId,"\n\rStarting as PAN coordinator on channel 0x", gAllowToBlock_d);
               Serial_PrintHex(interfaceId,&mLogicalChannel, 1, gPrtHexNoFormat_c);
               Serial_Print(interfaceId,".\n\r", gAllowToBlock_d);
-
+#endif
               ret = App_StartCoordinator(0);
               if(ret == errorNoError)
               {
@@ -369,12 +377,13 @@ void AppThread(uint32_t argument)
                   ret = App_WaitMsg(pMsgIn, gMlmeStartCnf_c);
                   if(ret == errorNoError)
                   {
+#ifdef printEnable
                       Serial_Print(interfaceId,"Started the coordinator with PAN ID 0x", gAllowToBlock_d);
                       Serial_PrintHex(interfaceId,(uint8_t *)&mPanId, 2, gPrtHexNoFormat_c);
                       Serial_Print(interfaceId,", and short address 0x", gAllowToBlock_d);
                       Serial_PrintHex(interfaceId,(uint8_t *)&mShortAddress, 2, gPrtHexNoFormat_c);
                       Serial_Print(interfaceId,".\n\rReady to send and receive data over the UART.\n\r\n\r", gAllowToBlock_d);
-                      
+#endif
                       gState = stateListen;
                       OSA_EventSet(mAppEvent, gAppEvtDummyEvent_c);
                   }
@@ -493,9 +502,9 @@ static uint8_t App_StartScan(macScanType_t scanType, uint8_t appInstance)
 {
   mlmeMessage_t *pMsg;
   mlmeScanReq_t *pScanReq;
-
+#ifdef printEnable
   Serial_Print(interfaceId,"Sending the MLME-Scan Request message to the MAC...", gAllowToBlock_d);
-
+#endif
   /* Allocate a message for the MLME (We should check for NULL). */
   pMsg = MSG_AllocType(mlmeMessage_t);
   if(pMsg != NULL)
@@ -524,19 +533,25 @@ static uint8_t App_StartScan(macScanType_t scanType, uint8_t appInstance)
     /* Send the Scan request to the MLME. */
     if( NWK_MLME_SapHandler( pMsg, macInstance ) == gSuccess_c )
     {
+#ifdef printEnable
       Serial_Print(interfaceId,"Done\n\r", gAllowToBlock_d);
+#endif
       return errorNoError;
     }
     else
     {
+#ifdef printEnable
       Serial_Print(interfaceId,"Invalid parameter!\n\r", gAllowToBlock_d);
+#endif
       return errorInvalidParameter;
     }
   }
   else
   {
     /* Allocation of a message buffer failed. */
+#ifdef printEnable
     Serial_Print(interfaceId,"Message allocation failed!\n\r", gAllowToBlock_d);
+#endif
     return errorAllocFailed;
   }
 }
@@ -559,9 +574,9 @@ static void App_HandleScanEdConfirm(nwkMessage_t *pMsg)
 #ifndef gPHY_802_15_4g_d
   uint8_t Channel;
 #endif
-
+#ifdef printEnable
   Serial_Print(interfaceId,"Received the MLME-Scan Confirm message from the MAC\n\r", gAllowToBlock_d);
-    
+#endif
   /* Get a pointer to the energy detect results */
   pEdList = pMsg->msgData.scanCnf.resList.pEnergyDetectList;
 
@@ -607,7 +622,7 @@ static void App_HandleScanEdConfirm(nwkMessage_t *pMsg)
 #endif /* gPHY_802_15_4g_d */     
 
   chMask &= ~(1 << mLogicalChannel);
-  
+#ifdef printEnable
   /* Print out the result of the ED scan */
   Serial_Print(interfaceId,"ED scan returned the following results:\n\r  [", gAllowToBlock_d);
 #ifdef gPHY_802_15_4g_d
@@ -621,7 +636,7 @@ static void App_HandleScanEdConfirm(nwkMessage_t *pMsg)
   Serial_Print(interfaceId,"Based on the ED scan the logical channel 0x", gAllowToBlock_d);
   Serial_PrintHex(interfaceId,&mLogicalChannel, 1, gPrtHexNoFormat_c);
   Serial_Print(interfaceId," was selected\n\r", gAllowToBlock_d);
-
+#endif
   /* The list of detected energies must be freed. */
   MSG_Free(pEdList);
 }
@@ -648,9 +663,9 @@ static uint8_t App_StartCoordinator( uint8_t appInstance )
   uint8_t value;
   /* Pointer which is used for easy access inside the allocated message */
   mlmeStartReq_t *pStartReq;
-
+#ifdef printEnable
   Serial_Print(interfaceId,"Sending the MLME-Start Request message to the MAC...", gAllowToBlock_d);
-  
+#endif
   /* Allocate a message for the MLME (We should check for NULL). */
   pMsg = MSG_AllocType(mlmeMessage_t);
   if(pMsg != NULL)
@@ -712,18 +727,23 @@ static uint8_t App_StartCoordinator( uint8_t appInstance )
     if(NWK_MLME_SapHandler( pMsg, macInstance ) != gSuccess_c)
     {
       /* One or more parameters in the Start Request message were invalid. */
+#ifdef printEnable
       Serial_Print(interfaceId,"Invalid parameter!\n\r", gAllowToBlock_d);
+#endif
       return errorInvalidParameter;
     }
   }
   else
   {
     /* Allocation of a message buffer failed. */
+#ifdef printEnable
     Serial_Print(interfaceId,"Message allocation failed!\n\r", gAllowToBlock_d);
+#endif
     return errorAllocFailed;
   }
-
+#ifdef printEnable
   Serial_Print(interfaceId,"Done\n\r", gAllowToBlock_d);
+#endif
   return errorNoError;
 }
 
@@ -748,8 +768,9 @@ static uint8_t App_SendAssociateResponse(nwkMessage_t *pMsgIn, uint8_t appInstan
   mlmeMessage_t *pMsg;
   mlmeAssociateRes_t *pAssocRes;
   uint8_t deviceId = 0;
+#ifdef printEnable
   Serial_Print(interfaceId,"Sending the MLME-Associate Response message to the MAC...", gAllowToBlock_d);
- 
+#endif
   /* Allocate a message for the MLME */
   pMsg = MSG_AllocType(mlmeMessage_t);
   if(pMsg != NULL)
@@ -796,14 +817,18 @@ static uint8_t App_SendAssociateResponse(nwkMessage_t *pMsgIn, uint8_t appInstan
     else
     {
       /* One or more parameters in the message were invalid. */
+#ifdef printEnable
       Serial_Print( interfaceId,"Invalid parameter!\n\r", gAllowToBlock_d );
+#endif
       return errorInvalidParameter;
     }
   }
   else
   {
     /* Allocation of a message buffer failed. */
+#ifdef printEnable
     Serial_Print(interfaceId,"Message allocation failed!\n\r", gAllowToBlock_d);
+#endif
     return errorAllocFailed;
   }
 }
@@ -824,13 +849,17 @@ static uint8_t App_HandleMlmeInput(nwkMessage_t *pMsg, uint8_t appInstance)
   /* Handle the incoming message. The type determines the sort of processing.*/
   switch(pMsg->msgType) {
   case gMlmeAssociateInd_c:
+#ifdef printEnable
     Serial_Print(interfaceId,"Received an MLME-Associate Indication from the MAC\n\r", gAllowToBlock_d);
+#endif
     /* A device sent us an Associate Request. We must send back a response.  */
     return App_SendAssociateResponse(pMsg, appInstance);
     
   case gMlmeCommStatusInd_c:
     /* Sent by the MLME after the Association Response has been transmitted. */
+#ifdef printEnable
     Serial_Print(interfaceId,"Received an MLME-Comm-Status Indication from the MAC\n\r", gAllowToBlock_d);
+#endif
     break;
     
   default:
