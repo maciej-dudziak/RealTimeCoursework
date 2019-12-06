@@ -48,7 +48,7 @@
 /* The chars will be send over the air when there are no pending packets*/
 #define mMaxKeysToReceive_c 	32
 #define maxMessageDelayMs		3000
-//#define dupa
+#define dupa
 //#define	printEnable
 /************************************************************************************
 *************************************************************************************

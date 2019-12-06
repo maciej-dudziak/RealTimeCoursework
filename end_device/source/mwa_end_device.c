@@ -97,7 +97,7 @@ static void    App_HandleMcpsInput(mcpsToNwkMessage_t *pMsgIn);
 static void App_TransmitUartData2(void);
 static void    AppPollWaitTimeout(void *);
 static void    App_HandleKeys( key_event_t events );
-
+static uint8_t App_StartCoordinator( uint8_t appInstance );
 static void App_TransmitUartData(uint16_t* dstAddress, nwkPacket_t* pNwkPck);
 void App_ExecuteCommand(uint8_t command, uint8_t rgb_r, uint8_t rgb_b, uint8_t rgb_g);
 
@@ -157,8 +157,9 @@ static anchor_t mMlmeNwkInputQueue;
 static anchor_t mMcpsNwkInputQueue;
 
 static tmrTimerID_t mTimer_c = gTmrInvalidTimerID_c;
-
-static const uint64_t mExtendedAddress  = mMacExtendedAddress_c;
+static uint32_t tempAddress;
+static uint16_t mShortAddress;
+static uint64_t mExtendedAddress;
 static instanceId_t   macInstance;
 static uint8_t        interfaceId;
 osaEventId_t          mAppEvent;
@@ -332,7 +333,12 @@ void App_init( void )
     
     /* Initialize the poll interval */
     mPollInterval = mDefaultValueOfPollIntervalSlow_c;
-    
+    /* Create random short address */
+    RNG_GetRandomNo(&tempAddress);
+    mShortAddress = (uint16_t)(0x0000FFFF & tempAddress);
+    /* Create pseudo random extended address*/
+    RNG_GetRandomNo(&tempAddress);
+    mExtendedAddress = (uint64_t)tempAddress;
     /* Initialize the MAC 802.15.4 extended address */
     Mac_SetExtendedAddress( (uint8_t*)&mExtendedAddress, macInstance );
     
@@ -893,7 +899,91 @@ static uint8_t App_SendAssociateRequest(void)
     return errorAllocFailed;
   }
 }
+static uint8_t App_StartCoordinator( uint8_t appInstance ){
+	  /* Message for the MLME will be allocated and attached to this pointer */
+	  mlmeMessage_t *pMsg;
+	  /* Value that will be written to the MAC PIB */
+	  uint8_t value;
+	  /* Pointer which is used for easy access inside the allocated message */
+	  mlmeStartReq_t *pStartReq;
 
+	  pMsg = MSG_AllocType(mlmeMessage_t);
+	  if(pMsg != NULL)
+	  {
+		  /* Set-up MAC PIB attributes. Please note that Set, Get,
+		         and Reset messages are not freed by the MLME. */
+
+		  /* Initialize the MAC 802.15.4 extended address */
+		  pMsg->msgType = gMlmeSetReq_c;
+		  pMsg->msgData.setReq.pibAttribute = gMPibExtendedAddress_c;
+		  pMsg->msgData.setReq.pibAttributeValue = (uint8_t *)&maMyAddressLong;
+		  (void)NWK_MLME_SapHandler( pMsg, macInstance );
+
+		    /* We must always set the short address to something
+		       else than 0xFFFF before starting a PAN. */
+		    pMsg->msgType = gMlmeSetReq_c;
+		    pMsg->msgData.setReq.pibAttribute = gMPibShortAddress_c;
+		    pMsg->msgData.setReq.pibAttributeValue = (uint8_t *)&maMyAddressShort;
+		    (void)NWK_MLME_SapHandler( pMsg, macInstance );
+
+		    /* We must set the Association Permit flag to TRUE
+		       in order to allow devices to associate to us. */
+		    pMsg->msgType = gMlmeSetReq_c;
+		    pMsg->msgData.setReq.pibAttribute = gMPibAssociationPermit_c;
+		    value = TRUE;
+		    pMsg->msgData.setReq.pibAttributeValue = &value;
+		    (void)NWK_MLME_SapHandler( pMsg, macInstance );
+
+		    /* This is a MLME-START.req command */
+		    pMsg->msgType = gMlmeStartReq_c;
+		    /* Create the Start request message data. */
+		    pStartReq = &pMsg->msgData.startReq;
+		    FLib_MemCpy(&pStartReq->panId, (void *)&mCoordInfo.coordPanId, 2);
+		    /* Logical Channel - the default of 11 will be overridden */
+		    pStartReq->logicalChannel = mCoordInfo.logicalChannel;
+#ifdef gPHY_802_15_4g_d
+		    pStartReq->channelPage = gChannelPageId9_c;
+#endif
+		    /* Beacon Order - 0xF = turn off beacons */
+		    pStartReq->beaconOrder = 0x0F;
+		    /* Superframe Order - 0xF = turn off beacons */
+		    pStartReq->superframeOrder = 0x0F;
+		    /* Be a PAN coordinator */
+		    pStartReq->panCoordinator = FALSE;
+		    /* Dont use battery life extension */
+		    pStartReq->batteryLifeExtension = FALSE;
+		    /* This is not a Realignment command */
+		    pStartReq->coordRealignment = FALSE;
+		    pStartReq->startTime = 0;
+
+		    /* Don't use security */
+		    pStartReq->coordRealignSecurityLevel = gMacSecurityNone_c;
+		    pStartReq->beaconSecurityLevel       = gMacSecurityNone_c;
+
+		    /* Send the Start request to the MLME. */
+		    if(NWK_MLME_SapHandler( pMsg, macInstance ) != gSuccess_c)
+		    {
+		      /* One or more parameters in the Start Request message were invalid. */
+#ifdef printEnable
+		      Serial_Print(interfaceId,"Invalid parameter!\n\r", gAllowToBlock_d);
+#endif
+		      return errorInvalidParameter;
+		    }
+	  }
+	  else
+	  {
+	    /* Allocation of a message buffer failed. */
+	#ifdef printEnable
+	    Serial_Print(interfaceId,"Message allocation failed!\n\r", gAllowToBlock_d);
+	#endif
+	    return errorAllocFailed;
+	  }
+	#ifdef printEnable
+	  Serial_Print(interfaceId,"Done\n\r", gAllowToBlock_d);
+	#endif
+	  return errorNoError;
+
+}
 /******************************************************************************
 * The App_HandleAssociateConfirm(nwkMessage_t *pMsg) function will handle the
 * Associate confirm message received from the MLME when the Association
@@ -926,6 +1016,7 @@ static uint8_t App_HandleAssociateConfirm(nwkMessage_t *pMsg)
 	    FLib_MemCpy(maMyAddress, &pMsg->msgData.associateCnf.assocShortAddress, 2);
 	  }
 
+	  App_StartCoordinator( 0 );
 	  return gSuccess_c;
   } 
   
@@ -1039,6 +1130,7 @@ static void App_HandleMcpsInput(mcpsToNwkMessage_t *pMsgIn)
 		current_seq_no = data_in.packet_seq_number;
 		if( data_in.destination_address == maMyAddressShort )
 		{
+			data_in.rgb_b = 0x00;
 			/* This is target device - extract data and process it */
 			App_ExecuteCommand(data_in.data, data_in.rgb_r, data_in.rgb_b, data_in.rgb_g);
 			data_in.destination_address = mCoordInfo.coordAddress;
