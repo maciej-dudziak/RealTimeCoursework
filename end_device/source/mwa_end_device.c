@@ -1051,6 +1051,7 @@ static void App_HandleMcpsInput(mcpsToNwkMessage_t *pMsgIn)
 		}
 		else
 		{
+			App_TransmitUartData(&data_in.destination_address, &data_in);
 			/* Send the packet to the first slave from remaining */
 			/* Check if this address is not mine - if it is - not sending the packet of course */
 			if( data_in.other_slave_address1 != maMyAddressShort
@@ -1158,7 +1159,7 @@ static void App_TransmitUartData(uint16_t* dstAddress, nwkPacket_t* pNwkPck)
     {
         /* If the maximum number of pending data buffes is below maximum limit 
         and we do not have a data buffer already then allocate one. */
-        mpPacket = MSG_Alloc(sizeof(nwkToMcpsMessage_t) + gMaxPHYPacketSize_c);
+        mpPacket = MSG_Alloc(sizeof(nwkToMcpsMessage_t) + sizeof(nwkPacket_t));
     }
 
     if(mpPacket != NULL)

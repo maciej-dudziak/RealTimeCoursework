@@ -48,6 +48,7 @@
 /* The chars will be send over the air when there are no pending packets*/
 #define mMaxKeysToReceive_c 	32
 #define maxMessageDelayMs		3000
+//#define dupa
 //#define	printEnable
 /************************************************************************************
 *************************************************************************************
@@ -1054,7 +1055,13 @@ static void App_BroadcastData(void)
 		{
 			if (mDeviceShortAddress[i] != 0xFFFF)
 			{
-				App_TransmitUartData(&mDeviceShortAddress[i], &data_to_send);
+#ifdef dupa
+				if(data_to_send.destination_address != mDeviceShortAddress[i]){
+#endif
+					App_TransmitUartData(&mDeviceShortAddress[i], &data_to_send);
+#ifdef dupa
+				}
+#endif
 			}
 		}
 		/* One data packet send - increment counter */
