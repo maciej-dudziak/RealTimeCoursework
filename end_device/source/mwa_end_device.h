@@ -42,7 +42,7 @@
 #endif
 
 /* Maximum number of outstanding packets */
-#define mDefaultValueOfMaxPendingDataPackets_c 2
+#define mDefaultValueOfMaxPendingDataPackets_c 20
 
 /* The slow polling interval is used if the coordinator
    had no data last time we polled. */

@@ -41,7 +41,7 @@
 #define mDefaultValueOfPanId_c            0xD34F
 
 /* Maximum number of outstanding packets */
-#define mDefaultValueOfMaxPendingDataPackets_c 1
+#define mDefaultValueOfMaxPendingDataPackets_c 20
 
 #define no_of_slaves 3
 /************************************************************************************

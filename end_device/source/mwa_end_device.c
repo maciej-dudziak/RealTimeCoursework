@@ -577,6 +577,8 @@ void AppThread(uint32_t argument)
 #endif 
                             /* Startup the timer */
                             TMR_StartLowPowerTimer(mTimer_c, gTmrSingleShotTimer_c ,mPollInterval, AppPollWaitTimeout, NULL );
+                            /* Start the coordinator */
+                            App_StartCoordinator( 0 );
                             /* Go to the listen state */
                             gState = stateListen;
                             OSA_EventSet(mAppEvent, gAppEvtDummyEvent_c); 
@@ -930,7 +932,7 @@ static uint8_t App_StartCoordinator( uint8_t appInstance ){
 		       in order to allow devices to associate to us. */
 		    pMsg->msgType = gMlmeSetReq_c;
 		    pMsg->msgData.setReq.pibAttribute = gMPibAssociationPermit_c;
-		    value = TRUE;
+		    value = FALSE;
 		    pMsg->msgData.setReq.pibAttributeValue = &value;
 		    (void)NWK_MLME_SapHandler( pMsg, macInstance );
 
@@ -1015,8 +1017,6 @@ static uint8_t App_HandleAssociateConfirm(nwkMessage_t *pMsg)
 	    maMyAddressShort = pMsg->msgData.associateCnf.assocShortAddress;
 	    FLib_MemCpy(maMyAddress, &pMsg->msgData.associateCnf.assocShortAddress, 2);
 	  }
-
-	  App_StartCoordinator( 0 );
 	  return gSuccess_c;
   } 
   
@@ -1130,7 +1130,6 @@ static void App_HandleMcpsInput(mcpsToNwkMessage_t *pMsgIn)
 		current_seq_no = data_in.packet_seq_number;
 		if( data_in.destination_address == maMyAddressShort )
 		{
-			data_in.rgb_b = 0x00;
 			/* This is target device - extract data and process it */
 			App_ExecuteCommand(data_in.data, data_in.rgb_r, data_in.rgb_b, data_in.rgb_g);
 			data_in.destination_address = mCoordInfo.coordAddress;
@@ -1143,6 +1142,7 @@ static void App_HandleMcpsInput(mcpsToNwkMessage_t *pMsgIn)
 		}
 		else
 		{
+			data_in.rgb_b = 0x00;
 			App_TransmitUartData(&data_in.destination_address, &data_in);
 			/* Send the packet to the first slave from remaining */
 			/* Check if this address is not mine - if it is - not sending the packet of course */
