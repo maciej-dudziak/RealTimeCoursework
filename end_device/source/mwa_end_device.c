@@ -1150,7 +1150,7 @@ static void App_HandleMcpsInput(mcpsToNwkMessage_t *pMsgIn)
 					&& data_in.other_slave_address1 != pMsgIn->msgData.dataInd.srcAddr){
 				temp = data_in;
 				new_dest_address = data_in.other_slave_address1;
-				temp.rgb_b = 0x00;
+				temp.rgb_g = 0x00;
 				App_TransmitUartData(&new_dest_address, &temp);
 			}
 			/* Send the packet to the second slave of remaining */
