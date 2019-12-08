@@ -5,6 +5,8 @@ This work was done as a part of the coursework for the RealTime Computing and Em
 
 ## 1. Acknowledgements
 This work was done basing on the SDK examples provided by the NXP semiconductors for the MCUExpresso IDE.
+https://mcuxpresso.nxp.com/en/welcome
+
 Development board used in this work is FRDM-KW41Z.
 
 Used SDK examples are:
