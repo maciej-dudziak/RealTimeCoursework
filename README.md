@@ -28,11 +28,11 @@ Project consists of two parts:
       User need to ensure that the correct name of the serial port is used (COM on Windows and /dev/ttyACM
       on Linux) with the correct port number.
       
-    - Embedded firmware based on the FreeRTOS. This repository contains only the content of the "source" folder
-      of the SDK example as only these files are being changed. To use this work user should first import
-      mentioned in Section 1 SDK examples to ensure that all the required drivers, Freescale framework,
-      802.15.4 stack is imported. Then, the user should just replace the content of the source folder with the content
-      of the corresponding folders in the repository.
+    - Embedded firmware based on the FreeRTOS. This repository contains only the content of the "source" 
+      folder of the SDK example as only these files are being changed. To use this work user should first 
+      import mentioned in Section 1 SDK examples to ensure that all the required drivers, Freescale framework,
+      802.15.4 stack is imported. Then, the user should just replace the content of the source folder with 
+      the content of the corresponding folders in the repository.
       
 The project was developed using the MCUXpresso IDE which is the open-source IDE provided by NXP.
 
