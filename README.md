@@ -53,7 +53,7 @@ The intent is to create a simple mesh network for your internet of things (IoT):
     radio messages from the host interface board or the other slave, act on them locally, 
     and relay to the other slavesif necessary.
     
-    3. There should bea convincing demonstration of forwarding and failover; 
+    3. There should be a convincing demonstration of forwarding and failover; 
     as some of the slave boards go out of range of the master, “mesh” communications 
     should be maintained until failure is eventually reported through the web interface.
     
