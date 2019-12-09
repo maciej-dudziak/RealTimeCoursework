@@ -28,7 +28,7 @@ def slave1_led(slave_number,led_action):
         ser.write(command.encode())
         response = ser.readline()
 
-    if response == "Success":
+    if response.decode() == "Success\n":
         if slave_number == 1:
             status.slave1 = "On" if led_action==1 else "Off" 
         elif slave_number == 2:
