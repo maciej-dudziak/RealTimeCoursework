@@ -1,5 +1,5 @@
 # RealTimeCoursework
-author: Maciej Dudziak
+author: Maciej Dudziak, Liga Anwar
 
 This work was done as a part of the coursework for the RealTime Computing and Embedded Systems module. Coursework instructions could be found below.
 
