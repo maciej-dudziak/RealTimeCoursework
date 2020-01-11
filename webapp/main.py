@@ -1,12 +1,12 @@
 from flask import Flask, render_template, request, redirect
-import serial
+import serial, sys
 
 #start app with the name of the script
 app = Flask(__name__)
 #create a serial port and open it
 #ser = serial.Serial('COM10', 115200)
 #use below if Linux
-ser = serial.Serial('/dev/ttyACM0', 115200)
+ser = serial.Serial(sys.argv[1], 115200)
 
 class LED_status():
     slave1 = "Off"

@@ -1,13 +1,4 @@
-.settings/
-board/
-CMSIS/
 Debug/
-doc/
-drivers/
-framework/
-freertos/
-ieee_802.15.4/
-libs/
 Release/
 startup/
 utilities/
