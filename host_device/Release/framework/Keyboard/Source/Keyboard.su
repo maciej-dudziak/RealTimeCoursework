@@ -1,0 +1,8 @@
+Keyboard.c:603:13:KeyScan	32	static
+Keyboard.c:1064:6:Switch_Press_ISR	16	static
+Keyboard.c:433:6:KBD_Deinit	8	static
+Keyboard.c:885:6:KBD_Init	8	static
+Keyboard.c:969:8:KBD_IsWakeUpSource	8	static
+Keyboard.c:997:6:KBD_PrepareEnterLowPower	0	static
+Keyboard.c:1022:6:KBD_PrepareExitLowPower	0	static
+Keyboard.c:1043:6:KBD_SwitchPressedOnWakeUp	8	static

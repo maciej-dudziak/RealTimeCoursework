@@ -1,0 +1,8 @@
+SPI_Adapter.c:916:13:Spi_SetIntState	8	static
+SPI_Adapter.c:107:13:Spi_Init	32	static
+SPI_Adapter.c:615:13:SPIx_ISR	32	static
+SPI_Adapter.c:150:13:Spi_Configure	80	static
+SPI_Adapter.c:297:13:Spi_SyncTransfer	48	static
+SPI_Adapter.c:390:13:Spi_AsyncTransfer	40	static
+SPI_Adapter.c:527:13:Spi_AsyncTransferSlave	32	static
+SPI_Adapter.c:577:13:Spi_SendDummyByte	24	static

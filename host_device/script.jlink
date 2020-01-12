@@ -1,0 +1,7 @@
+ExitOnError 1
+r
+h
+loadfile "G:\Programming Projects\RealTime\RTOS_for_coursework\host_device\Release\host_device.hex"
+qc
+
+qc

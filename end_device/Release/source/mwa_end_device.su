@@ -1,0 +1,11 @@
+mwa_end_device.c:1311:16:AppPollWaitTimeout	32	static
+mwa_end_device.c:1224:13:App_TransmitUartData	32	static
+mwa_end_device.c:1391:14:MLME_NWK_SapHandler	8	static
+mwa_end_device.c:1399:14:MCPS_NWK_SapHandler	8	static
+mwa_end_device.c:1351:13:App_HandleKeys	8	static
+mwa_end_device.c:686:13:UartRxCallBack	24	static
+mwa_end_device.c:271:6:App_Idle_Task	0	static
+mwa_end_device.c:323:6:App_init	16	static
+mwa_end_device.c:1091:6:App_ExecuteCommand	16	static
+mwa_end_device.c:391:6:AppThread	80	static
+mwa_end_device.c:214:6:main_task	16	static

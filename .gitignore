@@ -1,11 +1,1 @@
-Debug/
-Release/
-startup/
-utilities/
-*.launch
-*.jlink
-*.project
-*.cproject
-/.metadata/
-/.mcuxpressoide_packages_support/
 /FreeRTOS_TAD_logs

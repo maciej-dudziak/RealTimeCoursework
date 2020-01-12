@@ -1,0 +1,8 @@
+mwa_coordinator.c:1158:13:AckTimerCallback	16	static
+mwa_coordinator.c:1173:14:MLME_NWK_SapHandler	8	static
+mwa_coordinator.c:1181:14:MCPS_NWK_SapHandler	8	static
+mwa_coordinator.c:1128:13:App_HandleKeys	8	static
+mwa_coordinator.c:469:13:UartRxCallBack	24	static
+mwa_coordinator.c:220:6:App_init	16	static
+mwa_coordinator.c:268:6:AppThread	72	static
+mwa_coordinator.c:181:6:main_task	16	static

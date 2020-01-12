@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Delete resource &apos;frdmkw41z_wireless_examples_hybrid_ble_zigbee_router_freertos&apos;" deleteContents="false" description="Delete resource &apos;frdmkw41z_wireless_examples_hybrid_ble_zigbee_router_freertos&apos;" element1="/frdmkw41z_wireless_examples_hybrid_ble_zigbee_router_freertos" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1575668260430"/>
+</session>

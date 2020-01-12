@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
+		<item value="false" key="isRegEx"/>
+		<item value="dup" key="selection"/>
+		<item value="false" key="casesensitive"/>
+		<item value="false" key="incremental"/>
+		<item value="true" key="wrap"/>
+		<item value="false" key="wholeword"/>
+		<list key="findhistory">
+			<item value="dup"/>
+			<item value="App_HandleAssociateConfirm"/>
+			<item value="App_StartCoordinator"/>
+			<item value="gMlmeStartReq_c"/>
+			<item value="AppInstance"/>
+			<item value="mLogicalChannel"/>
+			<item value="panDescriptor_t"/>
+			<item value="mShortAddress"/>
+			<item value="Mac_Set"/>
+			<item value="mlmeStartReq_t"/>
+			<item value="mPanId"/>
+			<item value="last_packet"/>
+			<item value="Serial_Print"/>
+			<item value="deviceId"/>
+			<item value="App_TransmitUartData"/>
+		</list>
+		<list key="replacehistory">
+		</list>
+	</section>
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
+		<item value="284" key="DIALOG_WIDTH"/>
+		<item value="1|Segoe UI|9.0|0|WINDOWS|1|-12|0|0|0|400|0|0|0|1|0|0|0|0|Segoe UI" key="DIALOG_FONT_NAME"/>
+		<item value="391" key="DIALOG_HEIGHT"/>
+		<item value="1260" key="DIALOG_X_ORIGIN"/>
+		<item value="441" key="DIALOG_Y_ORIGIN"/>
+	</section>
+</section>
