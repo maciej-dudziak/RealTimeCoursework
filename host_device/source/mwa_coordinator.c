@@ -884,7 +884,9 @@ static uint8_t App_HandleMlmeInput(nwkMessage_t *pMsg, uint8_t appInstance)
 
 /******************************************************************************
 * The App_HandleMcpsInput(mcpsToNwkMessage_t *pMsgIn) function will handle
-* messages from the MCPS, e.g. Data Confirm, and Data Indication.
+* messages from the MCPS, e.g. Data Confirm, and Data Indication. It checks
+* if the received message is the acknowledgement for the message that has
+* been sent before
 *
 ******************************************************************************/
 static void App_HandleMcpsInput(mcpsToNwkMessage_t *pMsgIn, uint8_t appInstance)
@@ -895,20 +897,6 @@ static void App_HandleMcpsInput(mcpsToNwkMessage_t *pMsgIn, uint8_t appInstance)
     /* The MCPS-Data confirm is sent by the MAC to the network
        or application layer when data has been sent. */
   case gMcpsDataCnf_c:
-    /* If the MAC seq. number match the seq. no of last sent packet - print confirmation message */
-    /*if (pMsgIn->msgData.dataCnf.msduHandle == mMsduHandle)
-    {
-    	OSA_MutexLock(ackMutex, osaWaitForever_c);
-    	if( mcPendingPackets > 0 )
-    	{
-    		mcPendingPackets--;
-
-    		TMR_StopTimer(timerId);
-
-    		Serial_SyncWrite( interfaceId, (uint8_t*) positive_response, strlen(positive_response) );
-    	}
-    	OSA_MutexUnlock(ackMutex);
-    }*/
     break;
 
   case gMcpsDataInd_c:
@@ -928,7 +916,6 @@ static void App_HandleMcpsInput(mcpsToNwkMessage_t *pMsgIn, uint8_t appInstance)
 	    	}
 		  OSA_MutexUnlock(ackMutex);
 	  }
-    //Serial_SyncWrite( interfaceId,pMsgIn->msgData.dataInd.pMsdu, pMsgIn->msgData.dataInd.msduLength );
     break;
     
   default:
@@ -979,7 +966,9 @@ static uint8_t App_WaitMsg(nwkMessage_t *pMsg, uint8_t msgType)
 
 /******************************************************************************
  * Function to form the network layer packet which holds the information about
- * packet destination and other slaves in the network.
+ * packet destination and other slaves in the network. It take the pointer to
+ * the new, empty nwkPacket_t structure as an argument and fill it with the
+ * data from the command.
  *****************************************************************************/
 static void formNwkDataPacket(nwkPacket_t* pNwkPck)
 {
