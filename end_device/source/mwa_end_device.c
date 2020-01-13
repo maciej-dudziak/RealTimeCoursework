@@ -1142,6 +1142,7 @@ static void App_HandleMcpsInput(mcpsToNwkMessage_t *pMsgIn)
 		}
 		else
 		{
+			/* Send the message to the destination address then */
 			data_in.rgb_b = 0x00;
 			App_TransmitUartData(&data_in.destination_address, &data_in);
 			/* Send the packet to the first slave from remaining */
