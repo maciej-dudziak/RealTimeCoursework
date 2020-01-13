@@ -22,17 +22,18 @@ Those examples were used as a base for implementing simple networking functional
 Project consists of two parts: 
 
     - Flask web application written in Python that can be run in any browser. 
-      To run the application user need to have Python3 installed and ensure that can open
-      serial port (for example with Putty software) to which the host board is connected.
-      Lines 7-9 of the main.py file will be different depending on the machine and operating system.
-      User need to ensure that the correct name of the serial port is used (COM on Windows and /dev/ttyACM
-      on Linux) with the correct port number.
+      To run the application user need to have Python3 installed and the sys, flask and serial libraries.
+      The  application run successfuly on the Linux operating system, but the Windows may protest to open
+      the serial port due to the adiministrator right but even running it as an administrator didn't help.
+      To run the application user need to first connect the master board and check to which serial port it
+      is connected. After establishing that the application can be started by typing the name of that port
+      as the command line argument: python3 webapp.py <serial port name>, e.g.  python3 webapp.py /dev/ttyACM0.
       
-    - Embedded firmware based on the FreeRTOS. This repository contains only the content of the "source" 
-      folder of the SDK example as only these files are being changed. To use this work user should first 
-      import mentioned in Section 1 SDK examples to ensure that all the required drivers, Freescale framework,
-      802.15.4 stack is imported. Then, the user should just replace the content of the source folder with 
-      the content of the corresponding folders in the repository.
+    - Embedded firmware based on the FreeRTOS. This repository contains two programs: host_device and end_device.
+      The first one is for programming the master node and the second one for programming slave boards.
+      They are saved as a MCUExpresso project so the user need to download both host_device and end_device
+      folders and import them as a project to the MCUExpresso IDE and then just build and flash to the device.
+
       
 The project was developed using the MCUXpresso IDE which is the open-source IDE provided by NXP.
 
